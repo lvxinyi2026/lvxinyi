@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>你的本命季型是？| 四季色彩测试</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --bg:#FAF6F0; --card:#FFFFFF; --ink:#3A322C; --sub:#8C7F74; --accent:#C1694F;
+    --accent-soft:#F3E2DA; --line:#EDE4DA; --gold:#C9973B;
+  }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); min-height:100vh; }
+  .wrap { max-width:480px; margin:0 auto; min-height:100vh; padding:20px 18px 60px; }
+  .screen { display:none; animation:fade .35s ease; }
+  .screen.active { display:block; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+  .hero { text-align:center; padding:48px 0 24px; }
+  .hero .badge { display:inline-block; font-size:12px; color:var(--accent); background:var(--accent-soft);
+    padding:5px 14px; border-radius:99px; letter-spacing:2px; }
+  .hero h1 { font-size:30px; line-height:1.35; margin:18px 0 10px; }
+  .hero p { color:var(--sub); font-size:14px; line-height:1.8; }
+  .color-dots { display:flex; justify-content:center; gap:10px; margin:26px 0; }
+  .color-dots span { width:26px; height:26px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  .feat { background:var(--card); border-radius:16px; padding:18px; margin:18px 0; }
+  .feat div { display:flex; gap:10px; align-items:flex-start; padding:8px 0; font-size:14px; line-height:1.6; }
+  .feat div::before { content:"✓"; color:var(--accent); font-weight:700; }
+  .btn { display:block; width:100%; border:none; cursor:pointer; background:var(--accent); color:#fff;
+    font-size:17px; font-weight:600; padding:16px; border-radius:14px; margin-top:20px;
+    box-shadow:0 6px 16px rgba(193,105,79,.3); transition:transform .15s; }
+  .btn:active { transform:scale(.97); }
+  .btn.ghost { background:#fff; color:var(--accent); border:1.5px solid var(--accent); box-shadow:none; }
+  .tiny { text-align:center; color:var(--sub); font-size:12px; margin-top:14px; }
+
+  .progress { height:6px; background:var(--line); border-radius:99px; overflow:hidden; margin:14px 0 6px; }
+  .progress i { display:block; height:100%; background:linear-gradient(90deg,var(--gold),var(--accent)); border-radius:99px; transition:width .3s; }
+  .qnum { font-size:12px; color:var(--sub); text-align:right; }
+  .qcard { background:var(--card); border-radius:18px; padding:26px 20px; margin-top:18px; box-shadow:0 4px 14px rgba(90,70,50,.06); }
+  .qcard h2 { font-size:18px; line-height:1.6; margin-bottom:18px; }
+  .opt { display:block; width:100%; text-align:left; background:#FBF8F4; border:1.5px solid var(--line);
+    border-radius:12px; padding:15px 16px; font-size:15px; margin-bottom:10px; cursor:pointer; color:var(--ink);
+    transition:all .15s; line-height:1.5; }
+  .opt:active, .opt.sel { background:var(--accent-soft); border-color:var(--accent); }
+
+  .r-card { background:var(--card); border-radius:20px; padding:28px 22px; box-shadow:0 4px 18px rgba(90,70,50,.08); }
+  .r-label { text-align:center; font-size:12px; letter-spacing:3px; color:var(--sub); }
+  .r-season { text-align:center; font-size:34px; font-weight:800; margin:10px 0 4px; }
+  .r-en { text-align:center; font-size:13px; color:var(--gold); letter-spacing:1px; }
+  .r-kw { text-align:center; font-size:15px; color:var(--sub); margin:14px 0 20px; line-height:1.8; }
+  .axes { display:flex; gap:8px; margin:16px 0; }
+  .axis { flex:1; background:#FBF8F4; border-radius:12px; padding:12px 8px; text-align:center; }
+  .axis b { display:block; font-size:15px; margin-top:4px; }
+  .axis span { font-size:11px; color:var(--sub); }
+  .swatches { display:flex; justify-content:center; gap:12px; margin:20px 0 6px; }
+  .swatches figure { text-align:center; }
+  .swatches i { display:block; width:56px; height:56px; border-radius:14px; box-shadow:0 3px 8px rgba(0,0,0,.15); }
+  .swatches figcaption { font-size:11px; color:var(--sub); margin-top:6px; }
+  .divider { text-align:center; color:var(--sub); font-size:12px; margin:26px 0 14px; position:relative; }
+  .divider::before,.divider::after { content:""; position:absolute; top:50%; width:28%; height:1px; background:var(--line); }
+  .divider::before{left:0} .divider::after{right:0}
+
+  .locked { position:relative; border-radius:16px; overflow:hidden; margin-bottom:14px; }
+  .locked .blur { filter:blur(7px); padding:18px; background:#FBF8F4; font-size:14px; line-height:1.9; pointer-events:none; user-select:none; }
+  .locked .lock-tip { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:rgba(250,246,240,.45); }
+  .lock-tip .icon { font-size:22px; }
+  .lock-tip span { font-size:13px; font-weight:600; color:var(--ink); }
+
+  .mask { display:none; position:fixed; inset:0; background:rgba(40,30,25,.55); z-index:50; align-items:flex-end; justify-content:center; }
+  .mask.show { display:flex; }
+  .sheet { background:#fff; border-radius:22px 22px 0 0; width:100%; max-width:480px; padding:24px 20px 34px; animation:up .3s ease; max-height:88vh; overflow-y:auto; }
+  @keyframes up { from{transform:translateY(60px); opacity:.4;} to{transform:none; opacity:1;} }
+  .sheet h3 { text-align:center; font-size:18px; margin-bottom:4px; }
+  .sheet .sub2 { text-align:center; font-size:12px; color:var(--sub); margin-bottom:16px; }
+  .tier { display:flex; align-items:center; gap:12px; border:2px solid var(--line); border-radius:14px; padding:14px; margin-bottom:10px; cursor:pointer; }
+  .tier.on { border-color:var(--accent); background:var(--accent-soft); }
+  .tier .radio { width:18px; height:18px; border-radius:50%; border:2px solid var(--sub); flex-shrink:0; }
+  .tier.on .radio { border-color:var(--accent); background:var(--accent); box-shadow:inset 0 0 0 3px #fff; }
+  .tier .info { flex:1; }
+  .tier .info b { font-size:15px; }
+  .tier .info p { font-size:12px; color:var(--sub); margin-top:2px; }
+  .tier .price { font-size:18px; font-weight:800; color:var(--accent); }
+  .tier .price s { font-size:12px; color:var(--sub); font-weight:400; margin-right:4px; }
+  .qr { width:150px; height:150px; margin:16px auto 6px; border-radius:12px;
+    background:repeating-conic-gradient(#333 0 25%, #fff 0 50%) 0 0/22px 22px; position:relative; }
+  .qr::after { content:"演示"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.85); font-weight:700; color:var(--accent); border-radius:12px; }
+  .pay-note { text-align:center; font-size:12px; color:var(--sub); margin-bottom:10px; }
+
+  .rp h2 { font-size:19px; margin:26px 0 12px; padding-left:10px; border-left:4px solid var(--accent); }
+  .rp .r-card { padding:20px 18px; }
+  .grid20 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .grid20 figure { text-align:center; }
+  .grid20 i { display:block; width:100%; aspect-ratio:1; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,.12); }
+  .grid20 figcaption { font-size:10px; color:var(--sub); margin-top:4px; line-height:1.3; }
+  .tag-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .tag-list span { background:#F6EDE7; color:#A04428; font-size:13px; padding:7px 12px; border-radius:99px; }
+  .kv { font-size:14px; line-height:1.9; }
+  .kv b { color:var(--accent); }
+  .outfit { background:#FBF8F4; border-radius:12px; padding:14px; margin-bottom:10px; font-size:14px; line-height:1.8; }
+  .outfit b { color:var(--accent); }
+  .items-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .items-grid span { background:#FBF8F4; font-size:13px; padding:10px 12px; border-radius:10px; }
+  .disclaimer { font-size:12px; color:var(--sub); text-align:center; margin-top:30px; line-height:1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section id="s-intro" class="screen active">
+    <div class="hero">
+      <span class="badge">线下 ¥1388 的色彩诊断 · 线上版</span>
+      <h1>穿错颜色，再贵的衣服<br>都显土</h1>
+      <p>28 题 · 3 分钟<br>测出你的本命季型与专属色盘</p>
+      <div class="color-dots">
+        <span style="background:#F4A7B0"></span><span style="background:#A8C8E8"></span>
+        <span style="background:#C9973B"></span><span style="background:#9CAF88"></span>
+        <span style="background:#1A1A1A"></span>
+      </div>
+    </div>
+    <div class="feat">
+      <div>三轴科学判型：冷暖 × 深浅 × 净柔，定位你的 12 季型</div>
+      <div>20 色本命色盘 + 8 类避雷色，买衣服直接抄</div>
+      <div>口红色号、发色、穿搭公式一次给全</div>
+    </div>
+    <button class="btn" onclick="startQuiz()">开始测试（免费）</button>
+    <p class="tiny">已有 23,680 人测出本命季型 · 结果仅供参考</p>
+  </section>
+
+  <section id="s-quiz" class="screen">
+    <div class="progress"><i id="bar" style="width:0%"></i></div>
+    <div class="qnum" id="qnum">1 / 28</div>
+    <div class="qcard">
+      <h2 id="qtext"></h2>
+      <div id="qopts"></div>
+    </div>
+    <p class="tiny">凭第一直觉作答，不要过度思考</p>
+  </section>
+
+  <section id="s-result" class="screen">
+    <div class="r-card">
+      <div class="r-label">你 的 本 命 季 型</div>
+      <div class="r-season" id="rName">柔秋型</div>
+      <div class="r-en" id="rEn">SOFT AUTUMN</div>
+      <div class="r-kw" id="rKw"></div>
+      <div class="axes" id="rAxes"></div>
+      <div class="divider">你的 3 个本命代表色</div>
+      <div class="swatches" id="rTeaser"></div>
+    </div>
+
+    <div class="divider">完整报告还包含以下内容</div>
+    <div id="lockList"></div>
+    <button class="btn" onclick="openPay()">解锁完整报告</button>
+    <button class="btn ghost" onclick="restart()">重新测一次</button>
+    <p class="tiny">一杯奶茶钱，省下买错衣服的几百块</p>
+  </section>
+
+  <section id="s-report" class="screen rp">
+    <div class="r-card">
+      <div class="r-label">你 的 本 命 季 型</div>
+      <div class="r-season" id="pName"></div>
+      <div class="r-en" id="pEn"></div>
+      <div class="r-kw" id="pKw"></div>
+      <div class="axes" id="pAxes"></div>
+      <p class="kv" id="pDesc"></p>
+    </div>
+    <h2>你的本命色盘（20 色）</h2>
+    <div class="r-card"><div class="grid20" id="pPalette"></div></div>
+    <h2>避雷色（让你显黄显脏）</h2>
+    <div class="r-card"><div class="tag-list" id="pAvoid"></div></div>
+    <h2>彩妆指南</h2>
+    <div class="r-card"><div class="kv" id="pMakeup"></div></div>
+    <h2>发色建议</h2>
+    <div class="r-card"><div class="kv" id="pHair"></div></div>
+    <h2>穿搭公式（直接抄）</h2>
+    <div id="pOutfits"></div>
+    <h2>20 件单品清单</h2>
+    <div class="r-card"><div class="items-grid" id="pItems"></div></div>
+    <h2>风格参考</h2>
+    <div class="r-card"><p class="kv" id="pCeleb"></p></div>
+    <button class="btn ghost" onclick="restart()" style="margin-top:26px">重新测一次</button>
+    <p class="disclaimer">本测试基于四季色彩理论，结果仅供穿搭参考<br>不构成任何医学或专业形象诊断</p>
+  </section>
+</div>
+
+<div class="mask" id="payMask">
+  <div class="sheet">
+    <h3>解锁完整报告</h3>
+    <p class="sub2">一次付费 · 永久查看 · 含全部 6 大模块</p>
+    <div class="tier on" id="tier99" onclick="pickTier('99')">
+      <div class="radio"></div>
+      <div class="info"><b>完整版报告</b><p>色盘+避雷+彩妆+发色+穿搭+单品清单</p></div>
+      <div class="price"><s>¥29.9</s>¥9.9</div>
+    </div>
+    <div class="tier" id="tier69" onclick="pickTier('69')">
+      <div class="radio"></div>
+      <div class="info"><b>标准版报告</b><p>色盘+避雷+发色建议</p></div>
+      <div class="price"><s>¥19.9</s>¥6.9</div>
+    </div>
+    <div class="qr"></div>
+    <p class="pay-note">演示环境 · 正式部署时此处为微信/支付宝收款码</p>
+    <button class="btn" onclick="paySuccess()">我已完成支付（模拟）</button>
+    <button class="btn ghost" onclick="closePay()">再想想</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+ {t:"自然光下看手腕内侧血管颜色",axis:"T",opts:[["蓝紫色为主",-2],["蓝绿都有",0],["绿色为主",2]]},
+ {t:"夏天暴晒后你的皮肤通常",axis:"T",opts:[["容易晒红脱皮、难变黑",-2],["先红后黑",0],["直接晒成小麦色，很少晒伤",2]]},
+ {t:"戴上金银首饰对比，哪边更衬你",axis:"T",opts:[["银色显气色",-2],["差别不大",0],["金色显气色",2]]},
+ {t:"素颜时脸部肤色基调更接近",axis:"T",opts:[["粉白/青白色",-2],["中性米色",0],["黄调/蜜桃色",2]]},
+ {t:"哪类口红涂完最显白",axis:"T",opts:[["蓝调正红、玫粉",-2],["都差不多",0],["橘调、砖红、烂番茄",2]]},
+ {t:"穿哪种白色上衣更显精神",axis:"T",opts:[["纯白/本白",-2],["都行",0],["米白/象牙白",2]]},
+ {t:"你未染发的原生发色更接近",axis:"T",opts:[["乌黑/冷调深棕",-2],["自然棕",0],["暖栗棕/阳光下泛金",2]]},
+ {t:"你的瞳孔颜色",axis:"T",opts:[["黑色/深灰黑",-2],["深棕色",0],["浅棕/琥珀色",2]]},
+ {t:"运动或害羞时脸颊泛红的色调",axis:"T",opts:[["粉色",-2],["粉橘/不明显",0],["蜜桃橘色",2]]},
+ {t:"驼色焦糖系 vs 灰色系，哪类上身更好看",axis:"T",opts:[["灰色系",-2],["都不错",0],["驼色焦糖系",2]]},
+ {t:"素颜肤色明度属于",axis:"V",opts:[["白皙，常被夸白",-2],["中等偏白",-1],["中等自然",0],["健康偏深色",2]]},
+ {t:"原生发色深浅",axis:"V",opts:[["乌黑",2],["深棕",1],["中等棕",0],["浅棕/亚麻",-2]]},
+ {t:"穿纯黑色上衣的效果",axis:"V",opts:[["很衬，显气场",2],["还可以",1],["一般，略沉闷",-1],["显老显疲惫",-2]]},
+ {t:"穿浅色冰淇淋色系（樱花粉、薄荷绿、淡紫）",axis:"V",opts:[["显嫩显白",-2],["还行",-1],["显黑显没精神",2]]},
+ {t:"你的眉毛浓度",axis:"V",opts:[["浓密乌黑，存在感强",2],["适中",0],["偏淡/稀疏",-2]]},
+ {t:"你的五官整体对比度（发色、瞳色与肤色的反差）",axis:"V",opts:[["强对比，轮廓分明",2],["中等",0],["柔和低对比",-2]]},
+ {t:"深色（藏蓝、酒红、墨绿）vs 浅色，哪类更显质感",axis:"V",opts:[["深色",2],["看情况",0],["浅色更显干净",-2]]},
+ {t:"戴深色帽子或穿深色高领时的脸色",axis:"V",opts:[["更白更有神",2],["没差别",0],["显暗显黄",-2]]},
+ {t:"过往染发/被夸过的发色",axis:"V",opts:[["深色、黑色最衬",2],["自然棕系",0],["浅棕/挑染浅色最衬",-2]]},
+ {t:"涂正红色口红的效果",axis:"C",opts:[["超显白、有气场",2],["还行",0],["显凶、有点突兀",-2]]},
+ {t:"穿莫兰迪灰调（燕麦色、雾霾蓝、豆沙色）",axis:"C",opts:[["显气质",-2],["还行",0],["显脏显暗",2]]},
+ {t:"高饱和色（宝蓝、明黄、正红）你能驾驭吗",axis:"C",opts:[["轻松驾驭",2],["偶尔可以",0],["完全压不住",-2]]},
+ {t:"穿灰色系的效果",axis:"C",opts:[["高级灰显气质",-2],["看深浅",0],["显憔悴",2]]},
+ {t:"你的五官线条感",axis:"C",opts:[["清晰分明，轮廓利落",2],["适中",0],["柔和圆润，边界模糊",-2]]},
+ {t:"哪种印花更适合你",axis:"C",opts:[["大花/高对比印花",2],["纯色最好看",0],["小碎花/细密图案",-2]]},
+ {t:"全身顺色低对比 vs 撞色搭配",axis:"C",opts:[["撞色更有精神",2],["都行",0],["顺色低对比更高级",-2]]},
+ {t:"穿玫红/亮粉色的效果",axis:"C",opts:[["显白显气色",2],["一般",0],["显土显村",-2]]},
+ {t:"哪种牛仔蓝最衬你",axis:"C",opts:[["深色/黑色牛仔，对比强",2],["中蓝",0],["水洗浅灰蓝",-2]]}
+];
+
+const SEASONS = {
+浅春:{en:"LIGHT SPRING",kw:"春日晨光型美人——浅色+暖调，越清透越显嫩",
+ desc:"你的肤色暖而浅，五官量感轻盈。清透的暖浅色会让你像自带反光板，而深暗浓重的颜色会瞬间压住你的灵气。",
+ palette:[["浅杏","#F6D9B8"],["蜜桃","#F7C8A8"],["浅珊瑚","#F2A68C"],["奶油黄","#F8E9B8"],["浅金","#EBD49B"],["嫩绿","#C6D98F"],["浅水绿","#A8D8C0"],["浅湖绿","#9FD8D4"],["浅天蓝","#A9CFE8"],["浅驼","#DCC3A3"],["浅咖","#C9A98C"],["暖白","#FBF4E6"],["浅粉","#F7CDD1"],["蜜瓜","#F3D9A4"],["浅苔绿","#B5C49A"],["浅番茄","#EE9A84"],["香草","#F5ECCE"],["浅杏棕","#D9B48F"],["浅暖灰","#D8CFC0"],["浅橙粉","#F4BFA0"]],
+ avoid:["纯黑","深酒红","藏蓝","冷灰","深紫","墨绿","荧光色","宝蓝"],
+ makeup:{fd:"黄调/中性调，选偏白但不过白的色号，忌厚重",lip:"蜜桃橘、西柚色、浅珊瑚、水红色、浅番茄",bl:"浅蜜桃、奶杏色",es:"浅杏、蜜桃、浅金棕，珠光选香槟",br:"浅棕，忌深黑"},
+ hair:{best:"浅金棕、蜂蜜茶棕、浅亚麻（暖调）、蜜糖棕",avoid:"纯黑、蓝黑、冷灰"},
+ outfits:[["上学通勤","奶油黄针织 + 浅咖直筒裤 + 暖白帆布包，清爽不费力"],["约会","浅珊瑚连衣裙 + 浅金耳饰，甜度刚好"],["春夏出游","嫩绿衬衫 + 浅杏半裙 + 草编包，把春天穿在身上"]],
+ items:"奶油黄T恤,浅杏针织开衫,浅咖直筒裤,蜜桃色衬衫,嫩绿半裙,浅水绿吊带,浅驼风衣,浅珊瑚连衣裙,浅金耳环,暖白帆布包,香草色卫衣,浅粉防晒衫,浅天蓝衬衫,蜜瓜色短裙,浅杏棕乐福鞋,浅番茄T恤,浅苔绿马甲,浅橙粉发圈,浅暖灰卫裤,珍珠发夹",
+ celeb:"参考风格方向：赵露思、虞书欣——清透元气，忌浓妆重色。"},
+暖春:{en:"TRUE SPRING",kw:"人间小太阳——暖调+中高明度，穿亮色像开了滤镜",
+ desc:"你的肤色暖而明亮，自带元气感。温暖的亮色让你容光焕发，冷调和灰暗的颜色会让你瞬间没精神。",
+ palette:[["暖黄","#F5D76E"],["金盏花","#F2B84B"],["珊瑚橙","#F08A5D"],["番茄红","#E2574C"],["暖粉","#F4A7B0"],["苹果绿","#A6C96A"],["翠绿","#7FB069"],["暖绿松石","#5DBFB0"],["暖天蓝","#6BB3D9"],["驼色","#C69C6D"],["焦糖","#B07B4F"],["奶油","#F9EFD9"],["蜜橙","#EDA45C"],["草莓红","#E86A6A"],["暖杏","#EFC39A"],["浅橄榄","#B5B56B"],["暖棕","#8B5E3C"],["金棕","#C89B5A"],["暖白","#FCF6E9"],["橙红","#E8703A"]],
+ avoid:["冷灰","玫粉","宝蓝","深紫","贴脸纯黑","冰色系","冷调酒红","银白"],
+ makeup:{fd:"黄调象牙色，忌粉调",lip:"番茄红、珊瑚红、橘红、水蜜桃",bl:"暖珊瑚、蜜杏",es:"金棕、暖橘、蜜桃，珠光选金色",br:"暖棕"},
+ hair:{best:"金棕、蜂蜜棕、暖栗色、暖铜棕",avoid:"冷灰、蓝黑、漂白金"},
+ outfits:[["上学通勤","暖杏衬衫 + 驼色阔腿裤 + 金棕乐福鞋，元气通勤两不误"],["约会","番茄红针织 + 奶油白半裙，显白两个度"],["聚会","珊瑚橙连衣裙 + 金色耳饰，人群中发光"]],
+ items:"番茄红针织,暖杏衬衫,驼色阔腿裤,奶油白半裙,珊瑚橙连衣裙,金盏花黄T恤,苹果绿开衫,暖棕风衣,焦糖马甲,暖粉卫衣,翠绿半裙,金棕乐福鞋,金色耳饰,蜜橙短裙,暖白帆布包,草莓红吊带,暖天蓝衬衫,浅橄榄工装裤,橙红毛衣,棕色腰带",
+ celeb:"参考风格方向：谭松韵、章若楠——暖甜元气，笑容是最好的配饰。"},
+净春:{en:"BRIGHT SPRING",kw:"高饱和元气弹——暖+净，越鲜亮越出彩",
+ desc:"你的肤色暖且清透，能驾驭一般人 hold 不住的鲜亮暖色。灰扑扑的颜色是你的天敌，干净利落的亮色才是本体。",
+ palette:[["明黄","#F7DC6F"],["亮橙","#F39C4F"],["西瓜红","#EC5F67"],["亮珊瑚","#FF7F6B"],["翠绿","#58B368"],["孔雀绿","#2FA08C"],["亮湖绿","#45C4B0"],["亮蓝","#3E92CC"],["亮紫","#A569BD"],["暖白","#FDF9EE"],["浅金","#E8C766"],["亮粉","#F778A1"],["草绿","#7CB342"],["亮驼","#D4A373"],["橘红","#F0642D"],["亮杏","#F6B48A"],["深咖","#6B4226"],["亮红","#E63946"],["金棕","#C08A3E"],["薄荷绿","#8FD6B4"]],
+ avoid:["燕麦灰","豆沙灰","暗沉大地色","褪色牛仔","烟灰粉","冷灰","暗酒红","一切脏灰调"],
+ makeup:{fd:"中性偏黄调，轻薄透亮",lip:"亮珊瑚、西瓜红、亮橘红、樱桃红",bl:"亮蜜桃、珊瑚橘",es:"金棕+亮橘点缀，可玩彩色眼线",br:"暖棕，线条利落"},
+ hair:{best:"亮暖棕、金铜色、蜜茶色",avoid:"暗沉纯黑、灰调发色"},
+ outfits:[["上学通勤","亮珊瑚衬衫 + 暖白直筒裤 + 金色配饰，干净吸睛"],["约会","西瓜红连衣裙，一件封神"],["出游","明黄T恤 + 草绿半裙，撞色出片率 100%"]],
+ items:"西瓜红连衣裙,亮珊瑚衬衫,明黄T恤,草绿半裙,暖白直筒裤,翠绿针织,亮橙卫衣,孔雀绿吊带,亮粉短裙,金棕凉鞋,金色项链,亮杏开衫,橘红毛衣,亮蓝衬衫,浅金耳饰,亮驼短裤,薄荷绿背心,亮红腋下包,深咖腰带,亮紫发饰",
+ celeb:"参考风格方向：田曦薇、周也——鲜亮灵动，穿彩色比穿黑白灰更高级。"},
+浅夏:{en:"LIGHT SUMMER",kw:"夏日汽水——冷调+浅色，自带降温感",
+ desc:"你的肤色冷而浅，气质清透。浅浅的冷色系让你像一杯气泡水般清爽，暖调浓色则会让脸色发黄发暗。",
+ palette:[["樱花粉","#F5CCD6"],["浅玫粉","#EFB8C8"],["薰衣草","#CBB8DB"],["淡紫","#B9A8D1"],["天空蓝","#A8C8E8"],["浅蓝灰","#9FB8CE"],["冷薄荷","#B2D8CE"],["浅水绿","#A3D5D0"],["浅灰","#C9CFD6"],["珍珠白","#F7F5F2"],["浅冷粉","#F2C1CF"],["蓝铃花","#B4B9DC"],["浅牛仔","#8FA8C8"],["浅玫瑰","#E5A9B8"],["雾粉","#EAC4CE"],["浅银灰","#D5D9DE"],["浅青","#AFD3DA"],["浅葡萄","#C3A9C6"],["冷米白","#F2F0EC"],["浅蓝绿","#9CC9C4"]],
+ avoid:["橘调","驼色焦糖","贴脸纯黑","芥末黄","暖金","番茄红","深暖棕","荧光绿"],
+ makeup:{fd:"粉调/中性调偏白色号",lip:"樱花粉、水红、浅梅子、冷调豆沙",bl:"浅冷粉、淡玫瑰",es:"浅灰粉、淡紫、冷棕，珠光选银色",br:"灰棕、浅冷棕"},
+ hair:{best:"冷棕、亚麻灰棕、黑茶色、浅冷棕",avoid:"暖金、橘铜、暖红棕"},
+ outfits:[["上学通勤","天空蓝衬衫 + 浅灰西裤 + 珍珠白包，清冷学姐感"],["约会","樱花粉连衣裙 + 银色耳饰，温柔到掐出水"],["夏日","冷薄荷吊带 + 浅牛仔短裤，视觉降温 5 度"]],
+ items:"樱花粉连衣裙,天空蓝衬衫,浅灰西裤,冷薄荷吊带,浅牛仔短裤,薰衣草针织,淡紫半裙,珍珠白帆布包,银色耳饰,浅玫瑰T恤,浅蓝灰开衫,雾粉防晒衫,浅青衬衫,浅水绿半裙,冷米白卫衣,浅葡萄发饰,浅银灰阔腿裤,浅冷粉睡衣,浅牛仔外套,珍珠发夹",
+ celeb:"参考风格方向：李沁、卢昱晓——清冷浅淡，淡妆比浓妆更出彩。"},
+冷夏:{en:"TRUE SUMMER",kw:"温柔冷白皮——冷+柔，天生的气质挂",
+ desc:"你的肤色冷调，气质温润。带灰度的冷色能衬托出你的高级感，任何暖调艳色都会破坏你与生俱来的柔和。",
+ palette:[["玫瑰粉","#D8A7B1"],["灰粉","#C9A3AC"],["雾霾蓝","#7C9EB2"],["灰蓝","#6E8CA8"],["薰衣草灰","#A99DBD"],["冷灰","#9AA3AD"],["深玫红","#B76E79"],["蓝灰绿","#8FA8A2"],["冷白","#F4F4F6"],["浅海军蓝","#4A6478"],["梅子色","#9E5B71"],["灰紫","#8E7FA0"],["浅冷粉","#E3BEC6"],["钢蓝","#5D7A94"],["冷鼠尾草","#A3B5A9"],["冷米","#E8E6E1"],["深灰蓝","#46586A"],["冷豆沙","#BE9B9B"],["蓝铃花","#93A6C8"],["浅石墨","#6B7280"]],
+ avoid:["橘色","暖黄","金色","驼色","焦糖","番茄红","珊瑚色","暖棕"],
+ makeup:{fd:"粉调/中性调，忌黄调",lip:"玫瑰豆沙、冷粉、梅子色、蓝调红",bl:"冷玫瑰、灰粉",es:"灰粉、冷棕、灰紫，珠光选银色",br:"灰棕"},
+ hair:{best:"自然冷黑、深冷棕、灰棕",avoid:"暖金、铜色、暖红"},
+ outfits:[["上学通勤","雾霾蓝衬衫 + 冷灰西裤 + 银色配饰，气质通勤模板"],["约会","玫瑰粉针织 + 冷白半裙，温柔有质感"],["正式","深灰蓝连衣裙 + 梅子色口红，冷艳不张扬"]],
+ items:"雾霾蓝衬衫,冷灰西裤,玫瑰粉针织,冷白半裙,深灰蓝连衣裙,灰粉卫衣,浅海军蓝风衣,薰衣草灰开衫,梅子色口红,银色项链,冷米卫衣,灰紫半裙,蓝灰绿T恤,冷豆沙围巾,钢蓝衬衫裙,浅石墨阔腿裤,冷鼠尾草半裙,深玫红吊带,冷白帆布包,灰棕眉笔",
+ celeb:"参考风格方向：刘亦菲、周韵——温柔清冷，越素越高级。"},
+柔夏:{en:"SOFT SUMMER",kw:"雾感美人——柔+冷，低饱和氛围感天花板",
+ desc:"你的五官柔和低对比，肤色带冷调。朦胧的灰调冷色与你的气质融为一体，高饱和和强对比会让你的脸显得疲惫。",
+ palette:[["燕麦灰粉","#C7B2B2"],["豆沙","#B98F8F"],["雾霾蓝","#8CA3B2"],["灰绿","#9CAF9C"],["灰紫","#A294AC"],["浅冷灰","#B9BEC4"],["干枯玫瑰","#C48F96"],["灰蓝绿","#8AA6A1"],["冷米灰","#D3CFC9"],["深灰玫","#A3717D"],["雾蓝","#9FB4C4"],["鼠尾草","#ACBCA4"],["浅灰紫","#B4AAC0"],["冷烟粉","#D0AAB2"],["灰海军","#5C6E80"],["浅苔灰","#B0B8A8"],["冷藕粉","#D4B8BC"],["深灰绿","#6E7F72"],["珍珠灰","#D8DBDC"],["冷棕灰","#9A8E86"]],
+ avoid:["正红","亮橙","明黄","黑白强对比","荧光色","宝蓝","高饱和玫红","亮面金色"],
+ makeup:{fd:"中性/粉调，追求柔焦妆效",lip:"豆沙、干枯玫瑰、灰粉、冷调奶茶",bl:"灰粉、浅玫瑰",es:"灰粉、雾棕、灰紫，哑光为主",br:"灰棕，线条柔和"},
+ hair:{best:"黑茶色、冷棕、灰棕挑染",avoid:"高饱和暖色、亮金"},
+ outfits:[["上学通勤","豆沙色针织 + 冷米灰阔腿裤，顺色穿出高级感"],["约会","干枯玫瑰连衣裙 + 哑光银饰，朦胧氛围拉满"],["秋冬","灰海军大衣 + 雾蓝围巾 + 冷烟粉内搭，层次感顺色叠穿"]],
+ items:"豆沙色针织,冷米灰阔腿裤,干枯玫瑰连衣裙,灰海军大衣,雾蓝围巾,雾霾蓝衬衫,灰绿半裙,灰紫开衫,冷藕粉T恤,哑光银耳环,浅冷灰卫衣,冷烟粉吊带,深灰绿风衣,鼠尾草衬衫裙,珍珠灰西裤,冷棕灰马甲,浅灰紫睡衣,深灰玫口红,灰蓝绿帆布包,燕麦色发圈",
+ celeb:"参考风格方向：刘诗诗、高圆圆——温婉松弛，美在没有攻击性。"},
+柔秋:{en:"SOFT AUTUMN",kw:"被阳光晒软的奶茶色——柔+暖，越柔和越显贵",
+ desc:"你的美是低饱和、暖调、中明度：五官低对比、色调偏暖，高饱和或强对比的颜色会“吃掉”你的脸，灰调暖色才能衬出你的质感。",
+ palette:[["奶油白","#F2E8D5"],["燕麦色","#D8C9AE"],["暖米灰","#BFB3A4"],["咖啡棕","#6F4E37"],["奶茶","#C9A98C"],["驼色","#B5886A"],["焦糖","#9C6B4F"],["暖杏","#D9A77E"],["鼠尾草绿","#9CAF88"],["橄榄绿","#8A8B5C"],["苔藓绿","#7D7F52"],["暖墨绿","#4A5B48"],["赤陶","#C1694F"],["铁锈红","#B4512F"],["暖酒红","#7E3B42"],["芥末黄","#D2A94C"],["蜂蜜金","#C9973B"],["暖豆沙","#C08B7E"],["深青灰","#4F6268"],["柿子橙","#C97B4A"]],
+ avoid:["纯白亮白","纯黑","玫粉/芭比粉","宝蓝/电光蓝","荧光色","冰粉冷浅色","冷铅灰","高饱和冷红"],
+ makeup:{fd:"黄调/中性调自然色号，别追求过白",lip:"赤陶、烂番茄、枫叶红、暖豆沙、奶茶棕、柿子色",bl:"蜜桃橘、杏色、暖珊瑚",es:"大地色全盘通吃，亮片选香槟金不选银白",br:"暖棕/灰棕，避开纯黑"},
+ hair:{best:"暖棕、蜂蜜茶棕、栗子棕、可可棕（5-7度）",avoid:"纯黑、冷灰棕、蓝黑、漂白金"},
+ outfits:[["上学通勤","燕麦色针织 + 驼色直筒裤 + 奶油白鞋包，柔秋天菜顺色"],["约会","赤陶色连衣裙 + 蜂蜜金耳饰 + 奶茶色开衫"],["秋冬叠穿","暖墨绿大衣 + 奶油白高领 + 焦糖半裙 + 咖啡棕靴子"]],
+ items:"奶油白高领打底,燕麦色针织开衫,驼色大衣,焦糖半裙,奶茶色卫衣,鼠尾草绿衬衫,橄榄绿工装裤,咖啡棕西装裤,赤陶色连衣裙,暖杏T恤,苔藓绿风衣,暖米灰西装,柿子橙毛衣,深青灰牛仔,暖棕乐福鞋,奶油白帆布包,蜂蜜金耳环,棕调丝巾,可可棕腰带,暖白老爹鞋",
+ celeb:"参考风格方向：汤唯、金高银——松弛感天花板，重点不在衣服贵，而在颜色对。"},
+暖秋:{en:"TRUE AUTUMN",kw:"复古油画感——暖+柔，行走的人间富贵花",
+ desc:"你的肤色暖调明显，自带浓郁氛围。大地色系穿在别人身上是土，穿在你身上是复古油画——冷浅色才是你需要绕开的。",
+ palette:[["焦糖","#A9683C"],["驼色","#B5886A"],["芥末黄","#D2A94C"],["橄榄绿","#7A7A3E"],["铁锈红","#B4512F"],["南瓜色","#C97B4A"],["深暖棕","#6F4E37"],["苔藓绿","#6B7B4F"],["暖酒红","#8C3B3B"],["赤陶","#C1694F"],["蜂蜜","#C9973B"],["深杏","#D9A77E"],["暖墨绿","#4A5B48"],["古铜","#9C6B4F"],["奶油","#F2E8D5"],["深橙","#C06030"],["暖军绿","#5E6B45"],["咖啡","#5C4033"],["土黄","#C4A35A"],["暖深青","#4F6268"]],
+ avoid:["冷粉","玫红","宝蓝","冰色系","纯白","冷灰","荧光色","一切浅冷色"],
+ makeup:{fd:"黄调自然色，忌粉白",lip:"枫叶红、砖红、南瓜色、土棕红",bl:"暖杏、赤陶、土橘",es:"暖棕、金棕、橘棕，哑光金属皆可",br:"深暖棕"},
+ hair:{best:"深暖棕、巧克力棕、红棕、焦糖挑染",avoid:"冷黑、灰调、漂浅冷色"},
+ outfits:[["上学通勤","驼色西装 + 奶油白内搭 + 古铜配饰，复古通勤"],["约会","铁锈红连衣裙 + 金饰，氛围感拉满"],["秋冬","橄榄绿大衣 + 芥末黄围巾 + 深暖棕靴，油画配色直接抄"]],
+ items:"驼色西装,铁锈红连衣裙,橄榄绿大衣,芥末黄围巾,焦糖针织,奶油白内搭,南瓜色毛衣,深暖棕半裙,苔藓绿衬衫,暖酒红包包,赤陶风衣,蜂蜜色吊带,古铜耳环,深杏开衫,暖军绿工装裤,咖啡短靴,土黄马甲,暖深青衬衫裙,深橙围巾,棕色皮带",
+ celeb:"参考风格方向：杨采钰、刘雯——复古浓郁，越厚越稳。"},
+深秋:{en:"DEEP AUTUMN",kw:"浓郁高级感——暖+深，气场藏在深色里",
+ desc:"你的发色肤色对比深而暖，能压住最浓郁的暖深色。浅淡粉嫩的颜色会让你显憔悴，深暖浓色才能撑起你的气场。",
+ palette:[["深咖啡","#4A332A"],["巧克力","#5C3D2E"],["深橄榄","#55552E"],["深苔藓","#4C5B3C"],["深焦糖","#8C5A2E"],["深铁锈","#8C3B22"],["深暖酒红","#6E2E2E"],["深芥末","#B8902E"],["深暖绿","#3E4E38"],["深驼","#9C7B54"],["深南瓜","#A85B2E"],["深古铜","#7A5230"],["深暖青","#3E565E"],["深杏棕","#B08860"],["奶油","#F2E8D5"],["深橘","#B05A28"],["深军绿","#46523A"],["暖黑棕","#3A2E28"],["深蜂蜜","#A87E2E"],["深陶土","#9C5238"]],
+ avoid:["浅粉","浅冷色","冰色系","荧光色","浅灰","玫粉","浅蓝","贴脸珍珠白"],
+ makeup:{fd:"黄调自然/小麦色",lip:"深砖红、暖调姨妈色、深枫叶、巧克力棕",bl:"深杏、土橘、古铜",es:"深棕、古铜、暖金，可画浓郁烟熏",br:"深棕/黑棕"},
+ hair:{best:"深巧克力、暖黑棕、深栗色",avoid:"浅色漂染、冷灰、亚麻金"},
+ outfits:[["上学通勤","深咖西装 + 深驼针织 + 金色配饰，低调有分量"],["约会","深铁锈连衣裙 + 深金耳饰，浓郁显贵"],["秋冬","深橄榄大衣 + 深芥末围巾 + 巧克力长靴，深色叠穿教科书"]],
+ items:"深咖西装,深驼针织,深铁锈连衣裙,深橄榄大衣,深芥末围巾,巧克力长靴,深焦糖毛衣,深暖酒红包包,深苔藓衬衫,奶油白高领,深南瓜卫衣,深古铜耳环,深暖青风衣,深军绿工装裤,暖黑棕皮带,深蜂蜜吊带,深陶土半裙,深杏棕开衫,金色项链,深棕贝雷帽",
+ celeb:"参考风格方向：舒淇、钟楚曦——浓郁深暖，厚唇深色都压得住。"},
+深冬:{en:"DEEP WINTER",kw:"冷艳大女主——冷+深，生人勿近的高级",
+ desc:"你的对比度深而冷，是唯一能驾驭纯黑+深冷浓色的季型。暖调浅色会让你显土显黄，深冷色才能衬出你的冷艳。",
+ palette:[["纯黑","#1A1A1A"],["深海军蓝","#1E2A3A"],["深酒红","#5C1A24"],["深紫","#3E2A4E"],["深翡翠","#1E4A3C"],["深宝蓝","#1F3A6E"],["深冷灰","#3A4048"],["深玫红","#8C1E3C"],["冰白","#F8F9FA"],["深松绿","#22453A"],["深冷棕","#3A2E2E"],["深紫红","#6E1E3E"],["墨蓝","#16283E"],["深冷青","#1E4E52"],["深葡萄","#4A1E3C"],["深炭灰","#2E3438"],["深冰蓝","#7C9CB8"],["正红","#C8102E"],["深浆果","#4E1A30"],["银灰","#B8BEC4"]],
+ avoid:["暖黄","橘色","驼色","浅暖色","芥末","珊瑚","暖金","燕麦色"],
+ makeup:{fd:"中性/粉调，忌黄调过暖",lip:"正红、深酒红、浆果色、蓝调姨妈色",bl:"冷玫瑰、浅梅子，少量即可",es:"深灰、冷棕、酒红，眼线要利落",br:"黑灰/深冷棕"},
+ hair:{best:"乌黑、蓝黑、深冷棕",avoid:"暖金、浅黄、橘铜"},
+ outfits:[["上学通勤","纯黑西装 + 冰白内搭 + 银色配饰，冷感职场"],["约会","深酒红连衣裙 + 正红唇，气场全开"],["秋冬","深海军大衣 + 深炭灰高领 + 黑靴，全深色反而显白"]],
+ items:"纯黑西装,冰白内搭,深酒红连衣裙,深海军大衣,深炭灰高领,黑色长靴,深翡翠衬衫,深宝蓝针织,深紫半裙,银色耳环,深玫红吊带,墨蓝风衣,深冷青衬衫裙,深葡萄口红,正红毛衣,深炭灰阔腿裤,深松绿马甲,银灰围巾,黑色皮带,深浆果包包",
+ celeb:"参考风格方向：迪丽热巴、倪妮——冷浓深艳，大女主气场。"},
+冷冬:{en:"TRUE WINTER",kw:"冰雪女王——冷+净，黑白红三色封神",
+ desc:"你的肤色冷而清透，对比利落。高对比的纯冷色（纯白、纯黑、正红、宝蓝）是你的统治区，一切暖调浊色都会让脸发暗。",
+ palette:[["纯白","#FFFFFF"],["纯黑","#101010"],["正红","#D21034"],["宝蓝","#2440A8"],["玫红","#D21E6E"],["冰粉","#F2C6DE"],["冰蓝","#A8D8EA"],["松绿","#146B4A"],["紫红","#A81E5C"],["冷灰","#8A929A"],["深海军蓝","#1E2A44"],["亮紫","#7A2E8E"],["冰紫","#C4B2E0"],["银白","#E8EAEC"],["正玫粉","#E8468C"],["冷青","#1E7E8C"],["蓝黑","#141E30"],["冷绿","#2E9E6B"],["冰柠","#EEF0C0"],["深玫","#B01E50"]],
+ avoid:["暖橘","驼色","金色","芥末","珊瑚","暖棕","燕麦","铁锈"],
+ makeup:{fd:"粉调/中性调，瓷感底妆",lip:"蓝调正红、玫红、冷调姨妈、正宫红",bl:"冷粉、浅玫",es:"冷灰、银白、宝蓝，可画猫眼",br:"黑灰，线条干净"},
+ hair:{best:"纯黑、蓝黑、冷深棕",avoid:"一切暖色、金色"},
+ outfits:[["上学通勤","纯白衬衫 + 纯黑西裤 + 正红包，极简三色高级炸场"],["约会","玫红连衣裙 + 银饰，冷艳甜美自由切换"],["正式","宝蓝连衣裙 + 冰白高跟鞋，红毯级配色"]],
+ items:"纯白衬衫,纯黑西裤,正红包包,玫红连衣裙,银色耳环,宝蓝连衣裙,冰白高跟鞋,冷灰大衣,松绿针织,深海军蓝风衣,紫红口红,冰粉睡衣,冷青衬衫,蓝黑卫衣,冷绿半裙,银白围巾,正玫粉吊带,冰紫开衫,黑色短靴,深玫包包",
+ celeb:"参考风格方向：范冰冰、张雨绮——冷艳浓烈，越纯粹越震撼。"},
+净冬:{en:"BRIGHT WINTER",kw:"高对比冷艳挂——净+冷，行走的焦点",
+ desc:"你的五官清晰、对比强烈，能驾驭最鲜亮的冷色和最强撞色。灰蒙蒙的莫兰迪色会盖住你的光芒，鲜亮冷色才是主角剧本。",
+ palette:[["亮玫红","#E01E70"],["正红","#E01E37"],["亮宝蓝","#1E50C8"],["亮紫","#8C1EB8"],["亮冰蓝","#50C8E8"],["亮松绿","#10986B"],["纯白","#FFFFFF"],["纯黑","#0A0A0A"],["亮粉","#F048A0"],["亮青","#00A0B0"],["亮紫红","#C01E8C"],["冰柠","#E8F05A"],["亮蓝绿","#10B8A8"],["亮葡萄","#701EA0"],["亮红紫","#B01460"],["亮天蓝","#38A0F0"],["亮银","#D8DCE0"],["亮绿","#20C070"],["亮蓝紫","#6030D0"],["亮冰粉","#F8C0E0"]],
+ avoid:["一切灰调莫兰迪","燕麦","豆沙","驼色","土色系","哑光暖色","褪色牛仔","雾蓝"],
+ makeup:{fd:"中性/粉调，干净瓷白",lip:"玫红、亮正红、樱桃红、火龙果色",bl:"亮冷粉，少量点缀",es:"亮蓝、亮紫、银色，可玩撞色眼妆",br:"黑灰，利落有型"},
+ hair:{best:"纯黑、蓝黑、可挑染冷色（紫/蓝）",avoid:"暖棕、金色"},
+ outfits:[["上学通勤","纯黑高领 + 亮宝蓝半裙 + 银色配饰，撞色高级玩家"],["约会","亮玫红连衣裙，一眼锁定全场"],["派对","亮紫吊带 + 纯黑皮裤，亮到发光"]],
+ items:"纯黑高领,亮宝蓝半裙,亮玫红连衣裙,亮紫吊带,纯黑皮裤,银色耳环,正红包包,亮冰蓝衬衫,亮粉卫衣,亮青半裙,纯白大衣,冰柠围巾,亮蓝绿吊带,亮葡萄发饰,亮天蓝衬衫裙,亮银腰带,亮绿马甲,亮冰粉睡衣,纯黑短靴,亮红紫口红",
+ celeb:"参考风格方向：杨幂、杨颖——高对比亮眼，敢穿亮色就是你的统治区。"}
+};
+
+const LOCK_MODULES = [
+ ["🎨","你的 20 色本命色盘","含色值，买衣服直接对照"],
+ ["🚫","8 类避雷色清单","这些颜色让你显黄显脏"],
+ ["💄","彩妆指南","粉底/口红/腮红/眼影方向"],
+ ["💇","发色建议","首选发色 + 避雷发色"],
+ ["👗","3 套穿搭公式 + 20 件单品清单","照着买不出错"],
+ ["✨","风格参考路线","同季型明星穿搭思路"]
+];
+
+let qi = 0, score = {T:0,V:0,C:0}, answers = [];
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function startQuiz(){ qi=0; score={T:0,V:0,C:0}; answers=[]; renderQ(); show('s-quiz'); }
+function renderQ(){
+  const q = QUESTIONS[qi];
+  document.getElementById('bar').style.width = (qi/QUESTIONS.length*100)+'%';
+  document.getElementById('qnum').textContent = (qi+1)+' / '+QUESTIONS.length;
+  document.getElementById('qtext').textContent = (qi+1)+'. '+q.t;
+  const box = document.getElementById('qopts'); box.innerHTML='';
+  q.opts.forEach(o=>{
+    const b = document.createElement('button');
+    b.className='opt'; b.textContent=o[0];
+    b.onclick=()=>{ score[q.axis]+=o[1]; answers.push(qi); qi++;
+      qi<QUESTIONS.length ? renderQ() : finish(); };
+    box.appendChild(b);
+  });
+}
+
+function decideSeason(T,V,C){
+  const warm = T>=3, cold = T<=-3;
+  const t2 = warm?'warm':cold?'cold':(T>=0?'warm':'cold');
+  if(t2==='warm'){
+    if(V<=-3) return '浅春';
+    if(V>=3) return '深秋';
+    if(C>=3) return '净春';
+    if(C<=-3) return '柔秋';
+    return (T>=8||(!warm&&T>=0)) ? '暖春' : '暖秋';
+  } else {
+    if(V<=-3) return '浅夏';
+    if(V>=3) return '深冬';
+    if(C>=3) return '净冬';
+    if(C<=-3) return '柔夏';
+    return (T<=-8||(!cold&&T<0)) ? '冷冬' : '冷夏';
+  }
+}
+
+let seasonKey = '柔秋';
+function finish(){
+  document.getElementById('bar').style.width='100%';
+  seasonKey = decideSeason(score.T, score.V, score.C);
+  const S = SEASONS[seasonKey];
+  document.getElementById('rName').textContent = seasonKey+'型';
+  document.getElementById('rEn').textContent = S.en;
+  document.getElementById('rKw').textContent = S.kw;
+  renderAxes('rAxes');
+  document.getElementById('rTeaser').innerHTML = S.palette.slice(0,3)
+    .map(c=>`<figure><i style="background:${c[1]}"></i><figcaption>${c[0]}</figcaption></figure>`).join('');
+  document.getElementById('lockList').innerHTML = LOCK_MODULES.map(m=>`
+    <div class="locked"><div class="blur">${m[1]}<br>${m[2]}<br>********<br>********</div>
+    <div class="lock-tip"><span class="icon">${m[0]}</span><span>${m[1]}</span></div></div>`).join('');
+  document.getElementById('pName').textContent = seasonKey+'型';
+  document.getElementById('pEn').textContent = S.en;
+  document.getElementById('pKw').textContent = S.kw;
+  document.getElementById('pDesc').innerHTML = '<b>季型解析：</b>'+S.desc;
+  renderAxes('pAxes');
+  document.getElementById('pPalette').innerHTML = S.palette
+    .map(c=>`<figure><i style="background:${c[1]}"></i><figcaption>${c[0]}<br>${c[1]}</figcaption></figure>`).join('');
+  document.getElementById('pAvoid').innerHTML = S.avoid.map(a=>`<span>${a}</span>`).join('');
+  const M=S.makeup;
+  document.getElementById('pMakeup').innerHTML =
+    `<b>粉底：</b>${M.fd}<br><b>口红：</b>${M.lip}<br><b>腮红：</b>${M.bl}<br><b>眼影：</b>${M.es}<br><b>眉色：</b>${M.br}`;
+  document.getElementById('pHair').innerHTML = `<b>首选：</b>${S.hair.best}<br><b>避开：</b>${S.hair.avoid}`;
+  document.getElementById('pOutfits').innerHTML = S.outfits
+    .map(o=>`<div class="outfit"><b>${o[0]}｜</b>${o[1]}</div>`).join('');
+  document.getElementById('pItems').innerHTML = S.items.split(',').map(i=>`<span>${i}</span>`).join('');
+  document.getElementById('pCeleb').textContent = S.celeb;
+  show('s-result');
+}
+function renderAxes(id){
+  const t = score.T>=3?'暖 '+fmt(score.T):score.T<=-3?'冷 '+fmt(-score.T):'中性';
+  const v = score.V>=3?'深 '+fmt(score.V):score.V<=-3?'浅 '+fmt(-score.V):'中性';
+  const c = score.C>=3?'净 '+fmt(score.C):score.C<=-3?'柔 '+fmt(-score.C):'中性';
+  document.getElementById(id).innerHTML =
+    `<div class="axis"><span>温度</span><b>${t}</b></div>
+     <div class="axis"><span>明度</span><b>${v}</b></div>
+     <div class="axis"><span>纯度</span><b>${c}</b></div>`;
+}
+function fmt(n){ return '+'+n; }
+
+let tier='99';
+function openPay(){ document.getElementById('payMask').classList.add('show'); }
+function closePay(){ document.getElementById('payMask').classList.remove('show'); }
+function pickTier(t){ tier=t;
+  document.getElementById('tier99').classList.toggle('on',t==='99');
+  document.getElementById('tier69').classList.toggle('on',t==='69');
+}
+function paySuccess(){ closePay(); show('s-report'); }
+function restart(){ show('s-intro'); }
+</script>
+</body>
+</html>
